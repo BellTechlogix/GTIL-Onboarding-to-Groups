@@ -199,7 +199,7 @@ $EXOdomain = (Get-EXOMailbox -ResultSize 1|select PrimarySmtpAddress).PrimarySmt
 
 $connectionverify = user-prompt -Title "Verify Connections" -Message "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct"
 
-If($connectionverify -eq 0){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
+If($connectionverify -eq '0'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
 	Exit}
 
 #Gather and verify Ticket Number
@@ -218,71 +218,81 @@ while($userverify -eq '0'){
 
 
 
-MultipleSelectionBox
-Write-Host "Is $User GTIL employees/secondees OR GTIL consultants/contractors? (
-1 for  GTIL employees/secondees or
-2 for GTIL consultants/contractors
-3 for GTIL consultants/contractors with laptops)  " -ForegroundColor White -BackgroundColor Blue
-$resp1 = Read-host 'Enter Choice' 
-if ($resp1 -eq 1) 
+#Select the User type
+while($employeetypeverify -eq '0'){
+	$options01 = "GTIL employees/secondees","GTIL consultants/contractors","GTIL consultants/contractors with laptops"
+	$employeetype = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Groups Onboarding' -directions 'Verify selection in ticket and check hardware required' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
+	$employeetypeverify = user-prompt -Title "Verify Employee Type" -Message "You selected $employeetype is this correct?"
+}
+if ($employeetype -eq 'GTIL employees/secondees') 
 {
-$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Users”}
-$member = Get-MsolUser -UserPrincipalName $User
-Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
-$Group="GTIL_Employees_Global@gti.gt.com"
-#$Group1="GTIL-Users"
-Add-DistributionGroupMember -Identity $Group  -Member $User
-#Add-UnifiedGroupLinks -Identity $Group1 -LinkType Members -Links $User -ErrorAction Stop
-#Write-Host $User has been added to $Group and $Group1 as $User is an GTIL employees/secondees -ForegroundColor White -BackgroundColor Blue
-Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
-Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
-Write-Host "Enter User's Location? (
-1 for  London or 
-2 for Chicago or
-3 for Downers Grove
-4 for No Groups requires to be Added )" -ForegroundColor White -BackgroundColor Blue
-$resp = Read-host 'Enter Choice' 
-if ($resp -eq 1) 
-{ $Group="GTIL_Employees_London@gti.gt.com"
-Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
-Write-Host $User has been added to $Group -ForegroundColor White -BackgroundColor Blue
-} 
-if ($resp -eq 2) 
-{ 
- $Group="GTIL_Employees_Chicago@gti.gt.com"
-Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
-Write-Host $User has been added to $Group -ForegroundColor White -BackgroundColor Blue 
-} 
-if ($resp -eq 3) 
-{ $Group="GTIL_Employees_DownersGrove@gti.gt.com"
-Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
-Write-Host $User has been added to $Group -ForegroundColor White -BackgroundColor Blue
-}
-if ($resp -eq 4) 
-{ 
-Write-Host $User has not been added to any Location Group -ForegroundColor White -BackgroundColor Blue
-}  }
-if ($resp1 -eq 2)
-{$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support”}
-$member = Get-MsolUser -UserPrincipalName $User
-Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
-#$Group="GTIL-Support"
-#Add-UnifiedGroupLinks -Identity $Group -LinkType Members -Links $User
-#Write-Host $User has been added to $Group -ForegroundColor White -BackgroundColor Blue
-}
-if ($resp1 -eq 3)
-{$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support”}
-$member = Get-MsolUser -UserPrincipalName $User
-Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
-$securityGroup1 = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support with laptops”}
-$member1 = Get-MsolUser -UserPrincipalName $User
-Add-MsolGroupMember -GroupObjectId $securityGroup1.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member1.ObjectId
+	#Get GTIL-Users security group and add employee	
+	$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Users”}
+	$member = Get-MsolUser -UserPrincipalName $User
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Users Security Group')}"
+	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
 
+	#Get GTIL_Employees_Global Distribution Group and add employee
+	$Group="GTIL_Employees_Global@gti.gt.com"
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_Global Distribution Group')}"
+	Add-DistributionGroupMember -Identity $Group  -Member $User
+
+	#Add the IDHubInclude extension
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding IDHubInclude extension to $User')}"
+	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
+	Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
+	
+	#Select the employees location
+	while($employeelocationverify -eq '0'){
+		$options02 = "London","Chicago","Downers Grove","No Location Groups"
+		$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
+		$employeelocationverify = user-prompt -Title "Verify Employee location" -Message "You selected $employeelocation is this correct?"
+	}
+	
+	#Add employee to location specific groups
+	if ($employeelocation -eq 'London') 
+	{ $Group="GTIL_Employees_London@gti.gt.com"
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_London Distribution Group')}"
+	Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
+	} 
+	if ($employeelocation -eq 'Chicago') 
+	{ 
+	 $Group="GTIL_Employees_Chicago@gti.gt.com"
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_Chicago Distribution Group')}"
+	Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
+	} 
+	if ($employeelocation -eq 'Downers Grove') 
+	{ $Group="GTIL_Employees_DownersGrove@gti.gt.com"
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_DownersGrove Distribution Group')}"
+	Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
+	}
+	if ($employeelocation -eq 'No Location Groups') 
+	{ 
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('$User is not being added to any location specific Distribution Groups')}"
+	}  
 }
 
 
+if ($employeetype -eq 'GTIL consultants/contractors')
+{
+	#Get GTIL-Support security group and add Consultant/Contractor		
+	$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support”}
+	$member = Get-MsolUser -UserPrincipalName $User
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support Security Group')}"
+	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
+}
 
-#GTINetTest.Employee1@gti.gt.com--London
-#GTINetTest.Employee2@gti.gt.com--Chicago
-#GTINetTest.Employee3@gti.gt.com--Downers Grove
-#GTINetTest.Contractor@gti.gt.com--Contractor
+if ($employeetype -eq 'GTIL consultants/contractors with laptops')
+{
+	#Get GTIL-Support security group and add Consultant/Contractor	
+	$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support”}
+	$member = Get-MsolUser -UserPrincipalName $User
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support Security Group')}"
+	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
+	
+	#Get GTIL-Support with laptops security group and add Consultant/Contractor
+	$securityGroup1 = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support with laptops”}
+	$member1 = Get-MsolUser -UserPrincipalName $User
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support with laptops Security Group')}"
+	Add-MsolGroupMember -GroupObjectId $securityGroup1.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member1.ObjectId
+}
