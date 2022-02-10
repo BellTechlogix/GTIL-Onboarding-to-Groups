@@ -1,7 +1,7 @@
 <#
-Provided By: CapGemini
-Last Updated By: BTL
-Last Updated On: 17Nov2021
+Created By: BTL - Kristopher Roy
+Created On: 10Feb22
+Last Updated On: 10Feb22
 #>
 
 #This function lets you build an array of specific list items you wish
@@ -159,10 +159,10 @@ function user-prompt
     )
 
     If($Title -eq $Null -or $Title -eq ""){$title = "Selection"}
-    If($Select1 -eq $Null -or $Select1 -eq ""){$Select1 = " Yes "}
+    If($Select1 -eq $Null -or $Select1 -eq ""){$Select1 = " No "}
 	$selection1 = New-Object System.Management.Automation.Host.ChoiceDescription "&$Select1", `
 	$selection1ToolTip
-    If($Select2 -eq $Null -or $Select2 -eq ""){$Select2 = " No "}
+    If($Select2 -eq $Null -or $Select2 -eq ""){$Select2 = " Yes "}
 	$selection2 = New-Object System.Management.Automation.Host.ChoiceDescription "&$Select2", `
 	$selection2ToolTip
     If($message -eq $Null -or $Message -eq ""){$message = "Basic $select1,$select2 Options"}
@@ -185,9 +185,38 @@ function user-prompt
 #>
 }
 
-$ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number"
+#Begin Script
+#Authenticate and add Azure/O365 modules
+$credential= Get-Credential
+Connect-AzureAD -Credential $credential
+Connect-MsolService -Credential $credential
+Connect-ExchangeOnline -ShowProgress $true
 
-#$User= Read-Host "Enter Email Address"
+#Verify Connections are good
+$tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains|where{$_.Name -eq 'gti.gt.com'}).name
+$MsolDomain = (Get-MsolDomain|where{$_.Name -eq 'gti.gt.com'}).name
+$EXOdomain = (Get-EXOMailbox -ResultSize 1|select PrimarySmtpAddress).PrimarySmtpAddress.split('@')[1]
+
+$connectionverify = user-prompt -Title "Verify Connections" -Message "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct"
+
+If($connectionverify -eq 0){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
+	Exit}
+
+#Gather and verify Ticket Number
+while($ticketverify -eq '0'){
+    $ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number"
+
+    $ticketverify = user-prompt -Title "Verify Ticket" -Message "Is $ticket correct?"
+}
+
+#Gather and Verify New User Email
+while($userverify -eq '0'){
+    $user = InputBox -header "New User" -text "Input the New User Email from $ticket"
+
+    $userverify = user-prompt -Title "Verify User" -Message "Is $user correct?"
+}
+
+
 
 MultipleSelectionBox
 Write-Host "Is $User GTIL employees/secondees OR GTIL consultants/contractors? (
