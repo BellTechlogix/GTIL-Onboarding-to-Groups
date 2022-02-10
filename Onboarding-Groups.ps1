@@ -89,45 +89,103 @@ $objForm.Add_Shown({$objForm.Activate()})
 Return $Script:x
 }
 
-#creates a prompt for the new user being input
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
-$form = New-Object System.Windows.Forms.Form
-$form.Text = 'Data Entry Form'
-$form.Size = New-Object System.Drawing.Size(300,200)
-$form.StartPosition = 'CenterScreen'
-$okButton = New-Object System.Windows.Forms.Button
-$okButton.Location = New-Object System.Drawing.Point(75,120)
-$okButton.Size = New-Object System.Drawing.Size(75,23)
-$okButton.Text = 'OK'
-$okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
-$form.AcceptButton = $okButton
-$form.Controls.Add($okButton)
-$cancelButton = New-Object System.Windows.Forms.Button
-$cancelButton.Location = New-Object System.Drawing.Point(150,120)
-$cancelButton.Size = New-Object System.Drawing.Size(75,23)
-$cancelButton.Text = 'Cancel'
-$cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-$form.CancelButton = $cancelButton
-$form.Controls.Add($cancelButton)
-$label = New-Object System.Windows.Forms.Label
-$label.Location = New-Object System.Drawing.Point(10,20)
-$label.Size = New-Object System.Drawing.Size(280,20)
-$label.Text = 'Please enter the information in the space below:'
-$form.Controls.Add($label)
-$textBox = New-Object System.Windows.Forms.TextBox
-$textBox.Location = New-Object System.Drawing.Point(10,40)
-$textBox.Size = New-Object System.Drawing.Size(260,20)
-$form.Controls.Add($textBox)
-$form.Topmost = $true
-$form.Add_Shown({$textBox.Select()})
-$result = $form.ShowDialog()
-
-if ($result -eq [System.Windows.Forms.DialogResult]::OK)
+#This is a Function that allows a tailord input for recording
+Function InputBox($header,$text)
 {
-    $User = $textBox.Text
-    $User
+    #creates a prompt for the new user being input
+    $Input = @()
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = $header
+    $form.Size = New-Object System.Drawing.Size(300,200)
+    $form.StartPosition = 'CenterScreen'
+    $okButton = New-Object System.Windows.Forms.Button
+    $okButton.Location = New-Object System.Drawing.Point(75,120)
+    $okButton.Size = New-Object System.Drawing.Size(75,23)
+    $okButton.Text = 'OK'
+    $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $form.AcceptButton = $okButton
+    $form.Controls.Add($okButton)
+    $cancelButton = New-Object System.Windows.Forms.Button
+    $cancelButton.Location = New-Object System.Drawing.Point(150,120)
+    $cancelButton.Size = New-Object System.Drawing.Size(75,23)
+    $cancelButton.Text = 'Cancel'
+    $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $form.CancelButton = $cancelButton
+    $form.Controls.Add($cancelButton)
+    $label = New-Object System.Windows.Forms.Label
+    $label.Location = New-Object System.Drawing.Point(10,20)
+    $label.Size = New-Object System.Drawing.Size(280,20)
+    $label.Text = $text
+    $form.Controls.Add($label)
+    $textBox = New-Object System.Windows.Forms.TextBox
+    $textBox.Location = New-Object System.Drawing.Point(10,40)
+    $textBox.Size = New-Object System.Drawing.Size(260,20)
+    $form.Controls.Add($textBox)
+    $form.Topmost = $true
+    $form.Add_Shown({$textBox.Select()})
+    $result = $form.ShowDialog()
+
+    if ($result -eq [System.Windows.Forms.DialogResult]::OK)
+            {
+    Return $textBox.Text
+    }
 }
+
+#A Basic Dynamic 2 option User Prompt Function
+function user-prompt
+{
+	#If Select1 and 2 are not defined deafault is Yes,No
+	param(
+		#Title Defines Header for Prompt
+		[Parameter(Mandatory=$false)]
+		[string] $Title,
+		#Message Defines Body of Prompt
+		[Parameter(Mandatory=$False)]
+		[string]$Message,
+		#Select1 Defines First of two options
+		[Parameter(Mandatory=$False)]
+		[string]$Select1,
+		#Select2 Define Second of two options
+		[Parameter(Mandatory=$False)]
+		[string]$Select2,
+		#String to Display what first option means in a tooltip
+		[Parameter(Mandatory=$False)]
+		[string]$Selection1ToolTip,
+		#String to Display what second option means in a tooltip
+		[Parameter(Mandatory=$False)]
+		[string]$Selection2ToolTip
+    )
+
+    If($Title -eq $Null -or $Title -eq ""){$title = "Selection"}
+    If($Select1 -eq $Null -or $Select1 -eq ""){$Select1 = " Yes "}
+	$selection1 = New-Object System.Management.Automation.Host.ChoiceDescription "&$Select1", `
+	$selection1ToolTip
+    If($Select2 -eq $Null -or $Select2 -eq ""){$Select2 = " No "}
+	$selection2 = New-Object System.Management.Automation.Host.ChoiceDescription "&$Select2", `
+	$selection2ToolTip
+    If($message -eq $Null -or $Message -eq ""){$message = "Basic $select1,$select2 Options"}
+	$options = [System.Management.Automation.Host.ChoiceDescription[]]($selection1, $selection2)
+    $choice = $host.ui.PromptForChoice($title, $message, $options, 0)    
+    $choice = [int]$choice
+    Return $choice
+    #Returns selection1 = 0, and selection2 = 1
+
+<#
+	example 1 - No switches defined:
+	user-prompt
+	Result = A Yes,No prompt with Title "Selection", Body "Basic Yes,No Options"
+		
+	example 2 - Selections Defined
+	user-prompt -select1 "blue" -select2 "green"
+	Result = A blue,green prompt with Title "Selection" Body "Basic Blue,Green Options"
+		
+	Output will always be 0,1
+#>
+}
+
+$ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number"
 
 #$User= Read-Host "Enter Email Address"
 
