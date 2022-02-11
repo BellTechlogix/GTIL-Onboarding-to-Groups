@@ -203,11 +203,11 @@ If($connectionverify -eq '0'){powershell -WindowStyle hidden -Command "& {[Syste
 	Exit}
 
 #Gather and verify Ticket Number
-while($ticketverify -eq '0'){
+DO{
     $ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number"
 
     $ticketverify = user-prompt -Title "Verify Ticket" -Message "Is $ticket correct?"
-}
+}while($ticketverify -ne '1')
 
 #Gather and Verify New User Email
 while($userverify -eq '0'){
@@ -217,13 +217,12 @@ while($userverify -eq '0'){
 }
 
 
-
 #Select the User type
-while($employeetypeverify -eq '0'){
+DO{
 	$options01 = "GTIL employees/secondees","GTIL consultants/contractors","GTIL consultants/contractors with laptops"
 	$employeetype = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Groups Onboarding' -directions 'Verify selection in ticket and check hardware required' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	$employeetypeverify = user-prompt -Title "Verify Employee Type" -Message "You selected $employeetype is this correct?"
-}
+}while($employeetypeverify -ne '1')
 if ($employeetype -eq 'GTIL employees/secondees') 
 {
 	#Get GTIL-Users security group and add employee	
@@ -243,11 +242,11 @@ if ($employeetype -eq 'GTIL employees/secondees')
 	Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
 	
 	#Select the employees location
-	while($employeelocationverify -eq '0'){
+	DO{
 		$options02 = "London","Chicago","Downers Grove","No Location Groups"
 		$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		$employeelocationverify = user-prompt -Title "Verify Employee location" -Message "You selected $employeelocation is this correct?"
-	}
+	}while($employeelocationverify -ne '1')
 	
 	#Add employee to location specific groups
 	if ($employeelocation -eq 'London') 
