@@ -210,12 +210,11 @@ DO{
 }while($ticketverify -ne '1')
 
 #Gather and Verify New User Email
-while($userverify -eq '0'){
+DO{
     $user = InputBox -header "New User" -text "Input the New User Email from $ticket"
 
     $userverify = user-prompt -Title "Verify User" -Message "Is $user correct?"
-}
-
+}while($userverify -ne '1')
 
 #Select the User type
 DO{
