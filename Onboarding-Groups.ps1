@@ -245,7 +245,7 @@ if ($employeetype -eq 'GTIL employees/secondees')
 	#Select the employees location
 	DO{
 		$options02 = "London","Chicago","Downers Grove","No Location Groups"
-		$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
+		$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options02 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		$employeelocationverify = user-prompt -Title "Verify Employee location" -Message "You selected $employeelocation is this correct?"
 	}while($employeelocationverify -ne '1')
 	
