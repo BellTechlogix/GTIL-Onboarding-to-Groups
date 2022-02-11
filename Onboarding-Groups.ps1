@@ -100,6 +100,8 @@ Function InputBox($header,$text)
     $form.Text = $header
     $form.Size = New-Object System.Drawing.Size(300,200)
     $form.StartPosition = 'CenterScreen'
+    $formicon = New-Object system.drawing.icon ($icon)
+    $form.Icon = $formicon
     $okButton = New-Object System.Windows.Forms.Button
     $okButton.Location = New-Object System.Drawing.Point(75,120)
     $okButton.Size = New-Object System.Drawing.Size(75,23)
@@ -204,14 +206,14 @@ If($connectionverify -eq '0'){powershell -WindowStyle hidden -Command "& {[Syste
 
 #Gather and verify Ticket Number
 DO{
-    $ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number"
+    $ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
     $ticketverify = user-prompt -Title "Verify Ticket" -Message "Is $ticket correct?"
 }while($ticketverify -ne '1')
 
 #Gather and Verify New User Email
 DO{
-    $user = InputBox -header "New User" -text "Input the New User Email from $ticket"
+    $user = InputBox -header "New User" -text "Input the New User Email from $ticket" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
     $userverify = user-prompt -Title "Verify User" -Message "Is $user correct?"
 }while($userverify -ne '1')
