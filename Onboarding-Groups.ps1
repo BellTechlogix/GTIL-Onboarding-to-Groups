@@ -1,7 +1,7 @@
 <#
 Created By: BTL - Kristopher Roy
 Created On: 10Feb22
-Last Updated On: 10Feb22
+Last Updated On: 15Feb22
 #>
 
 #This function lets you build an array of specific list items you wish
@@ -90,7 +90,7 @@ Return $Script:x
 }
 
 #This is a Function that allows a tailord input for recording
-Function InputBox($header,$text)
+Function InputBox($header,$text,$icon)
 {
     #creates a prompt for the new user being input
     $Input = @()
@@ -192,7 +192,20 @@ function user-prompt
 $credential= Get-Credential
 Connect-AzureAD -Credential $credential
 Connect-MsolService -Credential $credential
+start-sleep 5s
 Connect-ExchangeOnline -ShowProgress $true
+
+#Verify C:\Temp exists or create it
+$folderName = "Temp"
+$Path="C:\"+$folderName
+if (!(Test-Path $Path))
+{
+	New-Item -itemType Directory -Path C:\ -Name $FolderName
+}
+	else
+{
+	write-host "Folder already exists"
+}
 
 #Verify Connections are good
 $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains|where{$_.Name -eq 'gti.gt.com'}).name
@@ -211,6 +224,16 @@ DO{
     $ticketverify = user-prompt -Title "Verify Ticket" -Message "Is $ticket correct?"
 }while($ticketverify -ne '1')
 
+#create txt for logging inputs
+$ticketfile = $Path+"\"+$ticket+".txt"
+New-item $ticketfile
+
+#log user running script
+"Script run by: "+$credential.UserName|out-file $ticketfile
+
+#log connection status
+"Connections Verified: AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain"|out-file $ticketfile -Append
+
 #Gather and Verify New User Email
 DO{
     $user = InputBox -header "New User" -text "Input the New User Email from $ticket" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
@@ -218,29 +241,39 @@ DO{
     $userverify = user-prompt -Title "Verify User" -Message "Is $user correct?"
 }while($userverify -ne '1')
 
+#log account being modified
+"Account being modified: "+$user|out-file $ticketfile -Append
+
 #Select the User type
 DO{
 	$options01 = "GTIL employees/secondees","GTIL consultants/contractors","GTIL consultants/contractors with laptops"
 	$employeetype = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Groups Onboarding' -directions 'Verify selection in ticket and check hardware required' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	$employeetypeverify = user-prompt -Title "Verify Employee Type" -Message "You selected $employeetype is this correct?"
 }while($employeetypeverify -ne '1')
+
+#log employee type selected
+"Employee Type selected: "+$employeetype|out-file $ticketfile -Append
+
 if ($employeetype -eq 'GTIL employees/secondees') 
 {
 	#Get GTIL-Users security group and add employee	
 	$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Users”}
 	$member = Get-MsolUser -UserPrincipalName $User
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Users Security Group')}"
-	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
+	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId|out-file $ticketfile -Append
+	"Adding $User to GTIL-Users Security Group "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
 
 	#Get GTIL_Employees_Global Distribution Group and add employee
 	$Group="GTIL_Employees_Global@gti.gt.com"
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_Global Distribution Group')}"
 	Add-DistributionGroupMember -Identity $Group  -Member $User
+	"Adding $User to GTIL_Employees_Global Distribution Group "|out-file $ticketfile -Append
 
 	#Add the IDHubInclude extension
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding IDHubInclude extension to $User')}"
 	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
 	Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
+	"Adding $User to IDHub Include Attribute extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud "|out-file $ticketfile -Append
 	
 	#Select the employees location
 	DO{
@@ -248,27 +281,33 @@ if ($employeetype -eq 'GTIL employees/secondees')
 		$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options02 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		$employeelocationverify = user-prompt -Title "Verify Employee location" -Message "You selected $employeelocation is this correct?"
 	}while($employeelocationverify -ne '1')
+	#log employee location selected
+	"Employee Location selected: "+$employeelocation|out-file $ticketfile -Append
 	
 	#Add employee to location specific groups
 	if ($employeelocation -eq 'London') 
 	{ $Group="GTIL_Employees_London@gti.gt.com"
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_London Distribution Group')}"
 	Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
+	"Adding $User to GTIL_Employees_London Distribution Group "|out-file $ticketfile -Append
 	} 
 	if ($employeelocation -eq 'Chicago') 
 	{ 
 	 $Group="GTIL_Employees_Chicago@gti.gt.com"
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_Chicago Distribution Group')}"
 	Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
+	"Adding $User to GTIL_Employees_Chicago Distribution Group "|out-file $ticketfile -Append
 	} 
 	if ($employeelocation -eq 'Downers Grove') 
 	{ $Group="GTIL_Employees_DownersGrove@gti.gt.com"
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL_Employees_DownersGrove Distribution Group')}"
 	Add-DistributionGroupMember -Identity $Group  -Member $User -ErrorAction Stop
+	"Adding $User to GTIL_Employees_DownersGrove Distribution Group "|out-file $ticketfile -Append
 	}
 	if ($employeelocation -eq 'No Location Groups') 
 	{ 
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('$User is not being added to any location specific Distribution Groups')}"
+	"$User is not being added to any location specific Distribution Groups "|out-file $ticketfile -Append
 	}  
 }
 
@@ -280,6 +319,16 @@ if ($employeetype -eq 'GTIL consultants/contractors')
 	$member = Get-MsolUser -UserPrincipalName $User
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support Security Group')}"
 	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
+	"Adding $User to GTIL-Support Security Group "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
+
+	#Verify IDHub Include
+	$IDHubverify = user-prompt -Title "Verify IDHub" -Message "Does Consultant/Contractor $user require IDHub Include?"
+    IF($IDhubverify -eq 1)
+    {
+    	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
+	    Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
+	    "Adding $User to IDHub Include Attribute extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud "|out-file $ticketfile -Append
+    }
 }
 
 if ($employeetype -eq 'GTIL consultants/contractors with laptops')
@@ -289,10 +338,25 @@ if ($employeetype -eq 'GTIL consultants/contractors with laptops')
 	$member = Get-MsolUser -UserPrincipalName $User
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support Security Group')}"
 	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId
+	"Adding $User to GTIL-Support Security Group "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
 	
 	#Get GTIL-Support with laptops security group and add Consultant/Contractor
 	$securityGroup1 = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Support with laptops”}
 	$member1 = Get-MsolUser -UserPrincipalName $User
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support with laptops Security Group')}"
 	Add-MsolGroupMember -GroupObjectId $securityGroup1.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member1.ObjectId
+	"Adding $User to GTIL-Support with laptops "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
+
+	#Verify IDHub Include
+	$IDHubverify = user-prompt -Title "Verify IDHub" -Message "Does Consultant/Contractor $user require IDHub Include?"
+    IF($IDhubverify -eq 1)
+    {
+    	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
+	    Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
+	    "Adding $User to IDHub Include Attribute extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud "|out-file $ticketfile -Append
+    }
 }
+
+#Prompt to add log to ticket
+powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Log folder should now open, please attach $ticketfile in ServiceNow')}"
+Invoke-Item $Path
