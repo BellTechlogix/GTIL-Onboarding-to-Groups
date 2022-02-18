@@ -190,30 +190,27 @@ function user-prompt
 #Begin Script
 
 #verify and attempt to install required modules
-IF(Get-Module -ListAvailable|where{$_.name -like "MSOnline"}){$MSOL = $True}
-Else{
+IF(Get-Module -ListAvailable|where{$_.name -like "MSOnline"}){$MSOL = $True}Else{
     Install-Module MSOnline
     start-sleep -seconds 5
-    IF(Get-Module -ListAvailable|where{$_.name -like "MSOnline"}){$MSOL = $True}
-        ELSE {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('MSOnline Module is missing and will not auto-install please resolve then re-run')}"
+    IF(Get-Module -ListAvailable|where{$_.name -like "MSOnline"}){$MSOL = $True}ELSE{
+		powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('MSOnline Module is missing and will not auto-install please resolve then re-run')}"
 	    Exit
         }
 }
-IF(Get-Module -ListAvailable|where{$_.name -like "ExchangeOnlineManagement*"}){$EXO = $True}
-Else{
+IF(Get-Module -ListAvailable|where{$_.name -like "ExchangeOnlineManagement*"}){$EXO = $True}Else{
     Install-Module -Name ExchangeOnlineManagement
     start-sleep -seconds 5
-    IF(Get-Module -ListAvailable|where{$_.name -like "ExchangeOnlineManagement*"}){$EXO = $True}
-        ELSE {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('ExchangeOnlineManagement Module is missing and will not auto-install please resolve then re-run')}"
-	Exit
-    }
+    IF(Get-Module -ListAvailable|where{$_.name -like "ExchangeOnlineManagement*"}){$EXO = $True}ELSE{
+		powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('ExchangeOnlineManagement Module is missing and will not auto-install please resolve then re-run')}"
+		Exit
+		}
 }
-IF(Get-Module -ListAvailable|where{$_.name -like "AzureAD*"}){$AAD = $True}
-Else{
+IF(Get-Module -ListAvailable|where{$_.name -like "AzureAD*"}){$AAD = $True}Else{
     Install-Module -Name ExchangeOnlineManagement
     start-sleep -seconds 5
-IF(Get-Module -ListAvailable|where{$_.name -like "AzureAD*"}){$AAD = $True}
-     ELSE {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('ExchangeOnlineManagement Module is missing and will not auto-install please resolve then re-run')}"
+IF(Get-Module -ListAvailable|where{$_.name -like "AzureAD*"}){$AAD = $True}ELSE{
+	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('ExchangeOnlineManagement Module is missing and will not auto-install please resolve then re-run')}"
 	 Exit
         }
 }
