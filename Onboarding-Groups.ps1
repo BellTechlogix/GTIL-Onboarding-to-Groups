@@ -1,7 +1,8 @@
+$ver = '2.05'
 <#
 Created By: BTL - Kristopher Roy
 Created On: 10Feb22
-Last Updated On: 15Feb22
+Last Updated On: 22Feb22
 #>
 
 #This function lets you build an array of specific list items you wish
@@ -189,6 +190,8 @@ function user-prompt
 
 #Begin Script
 
+$Versionverify = InputBox -Header "Verify Version" -text "You are running version $ver is this the most recent update type Yes or No"
+
 #verify and attempt to install required modules
 IF(Get-Module -ListAvailable|where{$_.name -like "MSOnline"}){$MSOL = $True}Else{
     Install-Module MSOnline
@@ -241,15 +244,15 @@ $EXOdomain = (Get-EXOMailbox -ResultSize 1|select PrimarySmtpAddress).PrimarySmt
 
 $connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct type Yes or No"
 
-If($connectionverify -eq 'No'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
+If($connectionverify -like 'No'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
 	Exit}
 
 #Gather and verify Ticket Number
 DO{
     $ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-    $ticketverify = user-prompt -Title "Verify Ticket" -Message "Is $ticket correct?"
-}while($ticketverify -ne '1')
+    $ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"
+}while($ticketverify -inotlike 'Yes')
 
 #create txt for logging inputs
 $ticketfile = $Path+"\"+$ticket+".txt"
@@ -265,8 +268,8 @@ New-item $ticketfile
 DO{
     $user = InputBox -header "New User" -text "Input the New User Email from $ticket" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-    $userverify = user-prompt -Title "Verify User" -Message "Is $user correct?"
-}while($userverify -ne '1')
+    $userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"
+}while($userverify -inotlike 'Yes')
 
 #log account being modified
 "Account being modified: "+$user|out-file $ticketfile -Append
@@ -275,8 +278,8 @@ DO{
 DO{
 	$options01 = "GTIL employees/secondees","GTIL consultants/contractors","GTIL consultants/contractors with laptops"
 	$employeetype = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Groups Onboarding' -directions 'Verify selection in ticket and check hardware required' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
-	$employeetypeverify = user-prompt -Title "Verify Employee Type" -Message "You selected $employeetype is this correct?"
-}while($employeetypeverify -ne '1')
+	$employeetypeverify = InputBox -Header "Verify Employee Type" -text "You selected $employeetype is this correct? Type Yes, or No"
+}while($employeetypeverify -inotlike 'Yes')
 
 #log employee type selected
 "Employee Type selected: "+$employeetype|out-file $ticketfile -Append
@@ -306,8 +309,8 @@ if ($employeetype -eq 'GTIL employees/secondees')
 	DO{
 		$options02 = "London","Chicago","Downers Grove","No Location Groups"
 		$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options02 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
-		$employeelocationverify = user-prompt -Title "Verify Employee location" -Message "You selected $employeelocation is this correct?"
-	}while($employeelocationverify -ne '1')
+		$employeelocationverify = InputBox -Header "Verify Employee location" -text "You selected $employeelocation is this correct? Type Yes, or No"
+	}while($employeelocationverify -inotlike 'Yes')
 	#log employee location selected
 	"Employee Location selected: "+$employeelocation|out-file $ticketfile -Append
 	
@@ -349,8 +352,8 @@ if ($employeetype -eq 'GTIL consultants/contractors')
 	"Adding $User to GTIL-Support Security Group "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
 
 	#Verify IDHub Include
-	$IDHubverify = user-prompt -Title "Verify IDHub" -Message "Does Consultant/Contractor $user require IDHub Include?"
-    IF($IDhubverify -eq 1)
+	$IDHubverify = InputBox -Header "Verify IDHub" -text "Does Consultant/Contractor $user require IDHub Include? Type Yes, or No"
+    IF($IDhubverify -like "Yes")
     {
     	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
 	    Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
@@ -375,8 +378,8 @@ if ($employeetype -eq 'GTIL consultants/contractors with laptops')
 	"Adding $User to GTIL-Support with laptops "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
 
 	#Verify IDHub Include
-	$IDHubverify = user-prompt -Title "Verify IDHub" -Message "Does Consultant/Contractor $user require IDHub Include?"
-    IF($IDhubverify -eq 1)
+	$IDHubverify = InputBox -Header "Verify IDHub" -text "Verify IDHub" -Message "Does Consultant/Contractor $user require IDHub Include? Type Yes, or No"
+    IF($IDhubverify -like "Yes")
     {
     	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
 	    Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
