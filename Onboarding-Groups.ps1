@@ -284,7 +284,7 @@ DO{
 if ($employeetype -eq 'GTIL employees/secondees') 
 {
 	#Get GTIL-Users security group and add employee	
-	$securityGroup = Get-MsolGroup -GroupType “Security” | Where-Object {$_.DisplayName -eq “GTIL-Users”}
+	$securityGroup = Get-MsolGroup -GroupType "Security" | Where-Object {$_.DisplayName -eq “GTIL-Users”}
 	$member = Get-MsolUser -UserPrincipalName $User
 	powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Users Security Group')}"
 	Add-MsolGroupMember -GroupObjectId $securityGroup.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member.ObjectId|out-file $ticketfile -Append
