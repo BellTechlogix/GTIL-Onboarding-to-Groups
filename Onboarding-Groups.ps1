@@ -118,11 +118,11 @@ Function InputBox($header,$text,$icon)
     $form.Controls.Add($cancelButton)
     $label = New-Object System.Windows.Forms.Label
     $label.Location = New-Object System.Drawing.Point(10,20)
-    $label.Size = New-Object System.Drawing.Size(280,20)
+    $label.Size = New-Object System.Drawing.Size(280,40)
     $label.Text = $text
     $form.Controls.Add($label)
     $textBox = New-Object System.Windows.Forms.TextBox
-    $textBox.Location = New-Object System.Drawing.Point(10,40)
+    $textBox.Location = New-Object System.Drawing.Point(10,70)
     $textBox.Size = New-Object System.Drawing.Size(260,20)
     $form.Controls.Add($textBox)
     $form.Topmost = $true
@@ -239,9 +239,9 @@ $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains|where{$_.Name -eq 'gt
 $MsolDomain = (Get-MsolDomain|where{$_.Name -eq 'gti.gt.com'}).name
 $EXOdomain = (Get-EXOMailbox -ResultSize 1|select PrimarySmtpAddress).PrimarySmtpAddress.split('@')[1]
 
-$connectionverify = user-prompt -Title "Verify Connections" -Message "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct"
+$connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct type Yes or No"
 
-If($connectionverify -eq '0'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
+If($connectionverify -eq 'No'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
 	Exit}
 
 #Gather and verify Ticket Number
