@@ -190,7 +190,13 @@ function user-prompt
 
 #Begin Script
 
-$Versionverify = InputBox -Header "Verify Version" -text "You are running version $ver is this the most recent update type Yes or No"
+#Verify most recent version being used
+$curver = $ver
+$data = Invoke-RestMethod -Method Get -Uri https://raw.githubusercontent.com/BellTechlogix/GTIL-Onboarding-to-Groups/master/Onboarding-Groups.ps1
+Invoke-Expression ($data.substring(0,13))
+if($curver -ge $ver){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You are running the most current script version $ver')}"}
+ELSEIF($curver -lt $ver){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You are running $curver the most current script version is $ver ending')}" 
+EXIT}
 
 #verify and attempt to install required modules
 IF(Get-Module -ListAvailable|where{$_.name -like "MSOnline"}){$MSOL = $True}Else{
