@@ -1,8 +1,8 @@
-$ver = '2.07'
+$ver = '2.08'
 <#
 Created By: BTL - Kristopher Roy
 Created On: 10Feb22
-Last Updated On: 24Feb22
+Last Updated On: 01Mar22
 #>
 
 #This function lets you build an array of specific list items you wish
@@ -237,6 +237,7 @@ IF($requesttypeverify -eq "New")
 	Connect-MsolService -Credential $credential
 	start-sleep -seconds 5
 	Connect-ExchangeOnline -ShowProgress $true
+	start-sleep -seconds 5
 
 	#Verify C:\Temp exists or create it
 	$folderName = "Temp"
@@ -257,8 +258,9 @@ IF($requesttypeverify -eq "New")
 
 	$connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct type Yes or No"
 
-	If($connectionverify -like 'No'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
-		Exit}
+	If($connectionverify -notlike 'Yes'){powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
+	start-sleep -seconds 5	
+	Exit}
 
 	#Gather and verify Ticket Number
 	DO{
@@ -266,6 +268,10 @@ IF($requesttypeverify -eq "New")
 
 		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"
 	}while($ticketverify -inotlike 'Yes')
+	#If no ticket number is verified quit the program with notice	
+	IF($ticketverify -eq $null) {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify a ticket number Stopping')}"
+	start-sleep -seconds 5	
+	Exit}
 
 	#create txt for logging inputs
 	$ticketfile = $Path+"\"+$ticket+".txt"
@@ -283,6 +289,10 @@ IF($requesttypeverify -eq "New")
 
 		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"
 	}while($userverify -inotlike 'Yes')
+	#If no user is verified quit the program with notice	
+	IF($userverify -eq $null) {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify a user Stopping')}"
+	start-sleep -seconds 5	
+	Exit}
 
 	#log account being modified
 	"Account being modified: "+$user|out-file $ticketfile -Append
@@ -293,6 +303,10 @@ IF($requesttypeverify -eq "New")
 		$employeetype = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Groups Onboarding' -directions 'Verify selection in ticket and check hardware required' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		$employeetypeverify = InputBox -Header "Verify Employee Type" -text "You selected $employeetype is this correct? Type Yes, or No"
 	}while($employeetypeverify -inotlike 'Yes')
+	#If no employeetype is verified quit the program with notice	
+	IF($employeetypeverify -eq $null) {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify an employee type Stopping')}"
+	start-sleep -seconds 5	
+	Exit}
 
 	#log employee type selected
 	"Employee Type selected: "+$employeetype|out-file $ticketfile -Append
@@ -324,6 +338,10 @@ IF($requesttypeverify -eq "New")
 			$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options02 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 			$employeelocationverify = InputBox -Header "Verify Employee location" -text "You selected $employeelocation is this correct? Type Yes, or No"
 		}while($employeelocationverify -inotlike 'Yes')
+		#If no employeelocation is verified quit the program with notice	
+		IF($employeelocationverify -eq $null) {powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify an employee location Stopping')}"
+		start-sleep -seconds 5	
+		Exit}
 		#log employee location selected
 		"Employee Location selected: "+$employeelocation|out-file $ticketfile -Append
 	
