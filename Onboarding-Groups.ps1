@@ -2,7 +2,8 @@ $ver = '2.08'
 <#
 Created By: BTL - Kristopher Roy
 Created On: 10Feb22
-Last Updated On: 01Mar22
+Last Updated On: 08Mar22
+Script Home: https://github.com/BellTechlogix/GTIL-Onboarding-to-Groups
 #>
 
 #This function lets you build an array of specific list items you wish
