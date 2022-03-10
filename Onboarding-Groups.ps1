@@ -1,8 +1,8 @@
-$ver = '2.08'
+$ver = '2.09'
 <#
 Created By: BTL - Kristopher Roy
 Created On: 10Feb22
-Last Updated On: 08Mar22
+Last Updated On: 10Mar22
 Script Home: https://github.com/BellTechlogix/GTIL-Onboarding-to-Groups
 #>
 
@@ -234,10 +234,11 @@ IF($requesttypeverify -eq "New")
 
 	#Authenticate and add Azure/O365 modules
 	$credential= Get-Credential
+    $username = $credential.UserName
 	Connect-AzureAD -Credential $credential
 	Connect-MsolService -Credential $credential
 	start-sleep -seconds 5
-	Connect-ExchangeOnline -ShowProgress $true
+	Connect-ExchangeOnline -ShowProgress $true -UserPrincipalName $username -DelegatedOrganization gti.gt.com
 	start-sleep -seconds 5
 
 	#Verify C:\Temp exists or create it
