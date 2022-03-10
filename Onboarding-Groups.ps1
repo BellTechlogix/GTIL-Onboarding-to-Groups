@@ -1,4 +1,4 @@
-$ver = '2.10'
+$ver = '2.11'
 <#
 Created By: BTL - Kristopher Roy
 Created On: 10Feb22
@@ -103,7 +103,7 @@ Function InputBox($header,$text,$icon)
     $form.Text = $header
     $form.Size = New-Object System.Drawing.Size(300,200)
     $form.StartPosition = 'CenterScreen'
-    $formicon = New-Object system.drawing.icon ($icon)
+    $formicon = New-Object System.drawing.icon ($icon)
     $form.Icon = $formicon
     $okButton = New-Object System.Windows.Forms.Button
     $okButton.Location = New-Object System.Drawing.Point(75,120)
@@ -233,12 +233,15 @@ IF($requesttypeverify -eq "New")
 	}
 
 	#Authenticate and add Azure/O365 modules
+	try{Connect-ExchangeOnline -DelegatedOrganization gti.gt.com}Catch{
+	powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Exchange Module failed to load, trying again')}"
+	Connect-ExchangeOnline -DelegatedOrganization gti.gt.com
+	}
 	$credential= Get-Credential
     $username = $credential.UserName
 	Connect-AzureAD -Credential $credential
 	Connect-MsolService -Credential $credential
 	start-sleep -seconds 5
-	Connect-ExchangeOnline -ShowProgress $true -UserPrincipalName $username -DelegatedOrganization gti.gt.com
 	start-sleep -seconds 5
 
 	#Verify C:\Temp exists or create it
@@ -258,7 +261,7 @@ IF($requesttypeverify -eq "New")
 	$MsolDomain = (Get-MsolDomain|where{$_.Name -eq 'gti.gt.com'}).name
 	$EXOdomain = (Get-EXOMailbox -ResultSize 1|select PrimarySmtpAddress).PrimarySmtpAddress.split('@')[1]
 
-	$connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct type Yes or No"
+	$connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain, MSOLDomain = $MsolDomain, EXODomain = $EXODomain is this correct type Yes or No" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
 	If($connectionverify -notlike 'Yes'){powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
 	start-sleep -seconds 5	
@@ -268,7 +271,7 @@ IF($requesttypeverify -eq "New")
 	DO{
 		$ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"
+		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($ticketverify -inotlike 'Yes')
 	#If no ticket number is verified quit the program with notice	
 	IF($ticketverify -eq $null) {powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify a ticket number Stopping')}"
@@ -289,7 +292,7 @@ IF($requesttypeverify -eq "New")
 	DO{
 		$user = InputBox -header "New User" -text "Input the New User Email from $ticket" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"
+		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($userverify -inotlike 'Yes')
 	#If no user is verified quit the program with notice	
 	IF($userverify -eq $null) {powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify a user Stopping')}"
@@ -303,7 +306,7 @@ IF($requesttypeverify -eq "New")
 	DO{
 		$options01 = "GTIL employees/secondees","GTIL consultants/contractors","GTIL consultants/contractors with laptops"
 		$employeetype = MultipleSelectionBox -listboxtype one -inputarray $options01 -label 'Groups Onboarding' -directions 'Verify selection in ticket and check hardware required' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
-		$employeetypeverify = InputBox -Header "Verify Employee Type" -text "You selected $employeetype is this correct? Type Yes, or No"
+		$employeetypeverify = InputBox -Header "Verify Employee Type" -text "You selected $employeetype is this correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($employeetypeverify -inotlike 'Yes')
 	#If no employeetype is verified quit the program with notice	
 	IF($employeetypeverify -eq $null) {powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify an employee type Stopping')}"
@@ -338,7 +341,7 @@ IF($requesttypeverify -eq "New")
 		DO{
 			$options02 = "London","Chicago","Downers Grove","No Location Groups"
 			$employeelocation = MultipleSelectionBox -listboxtype one -inputarray $options02 -label 'Employee Location' -directions 'Verify location in ticket' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
-			$employeelocationverify = InputBox -Header "Verify Employee location" -text "You selected $employeelocation is this correct? Type Yes, or No"
+			$employeelocationverify = InputBox -Header "Verify Employee location" -text "You selected $employeelocation is this correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		}while($employeelocationverify -inotlike 'Yes')
 		#If no employeelocation is verified quit the program with notice	
 		IF($employeelocationverify -eq $null) {powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('You did not verify an employee location Stopping')}"
@@ -385,12 +388,16 @@ IF($requesttypeverify -eq "New")
 		"Adding $User to GTIL-Support Security Group "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
 
 		#Verify IDHub Include
-		$IDHubverify = InputBox -Header "Verify IDHub" -text "Does Consultant/Contractor $user require IDHub Include? Type Yes, or No"
+		$IDHubverify = InputBox -Header "Verify IDHub" -text "Does Consultant/Contractor $user require IDHub Include? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		IF($IDhubverify -like "Yes")
 		{
     		Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
 			Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
 			"Adding $User to IDHub Include Attribute extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud "|out-file $ticketfile -Append
+		}
+		IF($IDhubverify -like "No" -or $IDhubverify -eq $Null)
+		{
+			"$User not added to IDHub Include "|out-file $ticketfile -Append
 		}
 	}
 
@@ -408,15 +415,19 @@ IF($requesttypeverify -eq "New")
 		$member1 = Get-MsolUser -UserPrincipalName $User
 		powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Adding $User to GTIL-Support with laptops Security Group')}"
 		Add-MsolGroupMember -GroupObjectId $securityGroup1.ObjectId -GroupMemberType “User” -GroupMemberObjectId $member1.ObjectId
-		"Adding $User to GTIL-Support with laptops "+$securityGroup.ObjectId.GUID|out-file $ticketfile -Append
+		"Adding $User to GTIL-Support with laptops "+$securityGroup1.ObjectId.GUID|out-file $ticketfile -Append
 
 		#Verify IDHub Include
-		$IDHubverify = InputBox -Header "Verify IDHub" -text "Verify IDHub" -Message "Does Consultant/Contractor $user require IDHub Include? Type Yes, or No"
+		$IDHubverify = InputBox -Header "Verify IDHub" -text "Does Consultant/Contractor $user require IDHub Include? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 		IF($IDhubverify -like "Yes")
 		{
     		Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
 			Write-Host $User has been included to ID HUB -ForegroundColor Red -BackgroundColor White
 			"Adding $User to IDHub Include Attribute extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud "|out-file $ticketfile -Append
+		}
+		IF($IDhubverify -like "No" -or $IDhubverify -eq $Null)
+		{
+			"$User not added to IDHub Include "|out-file $ticketfile -Append
 		}
 	}
 
@@ -443,7 +454,7 @@ IF($requesttypeverify -eq "Add_IDhub")
 	#Verify Connections are good
 	$tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains|where{$_.Name -eq 'gti.gt.com'}).name
 
-	$connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain is this correct type Yes or No"
+	$connectionverify = InputBox -Header "Verify Connections" -text "AZDomain = $tenantDomain is this correct type Yes or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
 	If($connectionverify -like 'No'){powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Connections Failed Stopping')}"
 		Exit}
@@ -452,7 +463,7 @@ IF($requesttypeverify -eq "Add_IDhub")
 	DO{
 		$ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"
+		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($ticketverify -inotlike 'Yes')
 
 	#Gather and Verify User that needs IDHub
@@ -474,7 +485,7 @@ IF($requesttypeverify -eq "Add_IDhub")
 	{
 		$IDHubStat = $val|where{$val -like 'IDHub*'}
 	}
-	$IDHubverify = InputBox -Header "Verify User" -text "Is $IDHubStat correct? Type Yes, or No"
+	$IDHubverify = InputBox -Header "Verify User" -text "Is $IDHubStat correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	If($IDHubverify -like 'No'){powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('IDHubInclude not set properly try again')}"}
 		
 }
@@ -504,16 +515,16 @@ IF($requesttypeverify -eq "Exclude_IDhub")
 
 	#Gather and verify Ticket Number
 	DO{
-		$ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
+		$ticket = InputBox -header "Ticket Number" -text "Input the related Ticket Number" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"
+		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($ticketverify -inotlike 'Yes')
 
 	#Gather and Verify User that needs IDHub
 	DO{
 		$user = InputBox -header "User" -text "Input the User Email from $ticket to be Excluded from IDHub" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"
+		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($userverify -inotlike 'Yes')
 
 	#Add user to IDHub Include
@@ -528,7 +539,7 @@ IF($requesttypeverify -eq "Exclude_IDhub")
 	{
 		$IDHubStat = $val|where{$val -like 'IDHub*'}
 	}
-	$IDHubverify = InputBox -Header "Verify User" -text "Is $IDHubStat correct? Type Yes, or No"
+	$IDHubverify = InputBox -Header "Verify User" -text "Is $IDHubStat correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	If($IDHubverify -like 'No'){powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('IDHubInclude not set properly try again')}"}
 		
 }
