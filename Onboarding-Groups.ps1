@@ -204,6 +204,18 @@ EXIT}
 $typeverify = "New","Add_IDHub","Exclude_IDHub"
 $requesttypeverify = MultipleSelectionBox -listboxtype one -inputarray $typeverify -label 'Request Type' -directions 'Select New User Request, or Existing needing added or removed from IDHub' -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
+#Verify C:\Temp exists or create it
+$folderName = "Temp"
+$Path="C:\"+$folderName
+if (!(Test-Path $Path))
+{
+	New-Item -itemType Directory -Path C:\ -Name $FolderName
+}
+	else
+{
+	write-host "Folder already exists"
+}
+
 IF($requesttypeverify -eq "New")
 {
 	#verify and attempt to install required modules
@@ -243,18 +255,6 @@ IF($requesttypeverify -eq "New")
 	Connect-MsolService -Credential $credential
 	start-sleep -seconds 5
 	start-sleep -seconds 5
-
-	#Verify C:\Temp exists or create it
-	$folderName = "Temp"
-	$Path="C:\"+$folderName
-	if (!(Test-Path $Path))
-	{
-		New-Item -itemType Directory -Path C:\ -Name $FolderName
-	}
-		else
-	{
-		write-host "Folder already exists"
-	}
 
 	#Verify Connections are good
 	$tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains|where{$_.Name -eq 'gti.gt.com'}).name
@@ -466,12 +466,25 @@ IF($requesttypeverify -eq "Add_IDhub")
 		$ticketverify = InputBox -Header "Verify Ticket" -text "Is $ticket correct type Yes, or No?"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($ticketverify -inotlike 'Yes')
 
+	#create txt for logging inputs
+	$ticketfile = $Path+"\"+$ticket+".txt"
+	New-item $ticketfile
+
+	#log user running script
+	"Script run by: "+$credential.UserName|out-file $ticketfile
+
+	#log connection status
+	"Connections Verified: AZDomain = $tenantDomain"|out-file $ticketfile -Append
+
 	#Gather and Verify User that needs IDHub
 	DO{
 		$user = InputBox -header "User" -text "Input the User Email from $ticket to be added to IDHub" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 
-		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No"
+		$userverify = InputBox -Header "Verify User" -text "Is $user correct? Type Yes, or No" -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	}while($userverify -inotlike 'Yes')
+
+	#log account being modified
+	"Account being modified: "+$user|out-file $ticketfile -Append
 
 	#Add user to IDHub Include
 	Set-AzureADUserExtension -ObjectID $User -ExtensionName extension_7ad0543d182445dcbce5d98a226ce6e2_gtIDHubFilterCloud -ExtensionValue 'IDHub=Include'
@@ -487,6 +500,7 @@ IF($requesttypeverify -eq "Add_IDhub")
 	}
 	$IDHubverify = InputBox -Header "Verify User" -text "Is $IDHubStat correct? Type Yes, or No"  -icon "C:\Windows\SystemApps\Microsoft.Windows.SecHealthUI_cw5n1h2txyewy\Assets\Account.theme-light.ico"
 	If($IDHubverify -like 'No'){powershell -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('IDHubInclude not set properly try again')}"}
+	If($IDHubverify -like 'Yes'){"IDHub Attribute $IDHubStat has been succesfully verified"|out-file $ticketfile -Append}
 		
 }
 IF($requesttypeverify -eq "Exclude_IDhub")
